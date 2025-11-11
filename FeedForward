@@ -1,0 +1,56 @@
+# --- Neural Network Example with Hyperparameter Sweep ---
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_moons
+from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import confusion_matrix
+
+# --- Dataset ---
+X, y = make_moons(n_samples=200, noise=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=2)
+
+# --- Hyperparameter Sweep ---
+params = [(b, h, lr) for b in [1, 16] for h in [(4,), (8, 4)] for lr in [0.01, 0.1]]
+results = []
+
+for b, h, lr in params:
+    clf = MLPClassifier(hidden_layer_sizes=h, batch_size=b, learning_rate_init=lr,
+                        max_iter=500, random_state=10)
+    clf.fit(X_train, y_train)
+    acc = clf.score(X_test, y_test)
+    results.append((b, h, lr, acc))
+
+results_df = pd.DataFrame(results, columns=['Batch Size', 'Hidden Layers', 'Learning Rate', 'Accuracy'])
+print("Hyperparameter Sweep Results:\n", results_df)
+
+# --- Final Model & Confusion Matrix ---
+final_clf = MLPClassifier(hidden_layer_sizes=(8, 4), batch_size=16,
+                          learning_rate_init=0.1, max_iter=500, random_state=10)
+final_clf.fit(X_train, y_train)
+y_pred = final_clf.predict(X_test)
+
+cm = pd.DataFrame(confusion_matrix(y_test, y_pred),
+                  columns=['Pred 0', 'Pred 1'], index=['True 0', 'True 1'])
+print("\nConfusion Matrix:\n", cm)
+
+# --- Simple Neural Network Visualization ---
+def draw_nn(layers):
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.axis('off')
+    v_gap, h_gap = 1.0 / max(layers), 1.0 / (len(layers) - 1)
+
+    for i, n_nodes in enumerate(layers):
+        for j in range(n_nodes):
+            y = 0.5 + (j - n_nodes / 2) * v_gap
+            ax.add_artist(plt.Circle((i * h_gap, y), 0.02, fc='w', ec='k'))
+            if i > 0:
+                for k in range(layers[i - 1]):
+                    y_prev = 0.5 + (k - layers[i - 1] / 2) * v_gap
+                    ax.plot([(i - 1) * h_gap, i * h_gap], [y_prev, y], 'k-', lw=0.5)
+
+    plt.title('Neural Network Architecture')
+    plt.show()
+
+draw_nn([2, 4, 2, 1])
