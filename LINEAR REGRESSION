@@ -1,0 +1,34 @@
+# --- Linear Regression using SGD ---
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Data: y = 2x
+X = np.array([1, 2, 3, 4, 5])
+y = np.array([2, 4, 6, 8, 10])
+
+# Initialize parameters
+w, b = np.random.rand(), np.random.rand()
+lr, epochs = 0.01, 50
+
+# SGD training loop
+for _ in range(epochs):
+    for i in np.random.permutation(len(X)):
+        y_pred = w * X[i] + b
+        error = y[i] - y_pred
+        w += lr * error * X[i]
+        b += lr * error
+
+# Final learned parameters
+print(f"Final Parameters → w: {w:.4f}, b: {b:.4f}")
+
+# Predictions
+y_pred_all = w * X + b
+
+# Plot
+plt.scatter(X, y, label="Original Data")
+plt.plot(X, y_pred_all, 'r-', label="SGD Fit Line")
+plt.title("Linear Regression with SGD")
+plt.xlabel("X")
+plt.ylabel("y")
+plt.legend()
+plt.show()
