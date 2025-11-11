@@ -1,0 +1,54 @@
+# --- Simple LSTM Character Model ---
+import torch
+import torch.nn as nn
+import matplotlib.pyplot as plt
+
+# Data
+text = "machine learning"
+chars = sorted(list(set(text)))
+char_to_idx = {c: i for i, c in enumerate(chars)}
+idx_to_char = {i: c for c, i in char_to_idx.items()}
+encoded = torch.tensor([char_to_idx[c] for c in text], dtype=torch.long)
+X, Y = encoded[:-1].unsqueeze(1), encoded[1:].unsqueeze(1)
+
+# Model
+class LSTM_RNN(nn.Module):
+    def _init_(self, vocab_size, hidden_size):
+        super()._init_()
+        self.embed = nn.Embedding(vocab_size, hidden_size)
+        self.lstm = nn.LSTM(hidden_size, hidden_size)
+        self.fc = nn.Linear(hidden_size, vocab_size)
+    def forward(self, x):
+        out, _ = self.lstm(self.embed(x))
+        return self.fc(out)
+
+vocab_size, hidden_size = len(chars), 32
+model = LSTM_RNN(vocab_size, hidden_size)
+loss_fn = nn.CrossEntropyLoss()
+opt = torch.optim.Adam(model.parameters(), lr=0.05)
+
+# Training
+loss_list = []
+for epoch in range(60):
+    opt.zero_grad()
+    out = model(X)
+    loss = loss_fn(out.view(-1, vocab_size), Y.view(-1))
+    loss.backward(); opt.step()
+    loss_list.append(loss.item())
+    print(f"Epoch {epoch+1}/60 - Loss: {loss.item():.4f}")
+
+# Plot Loss
+plt.plot(loss_list, label="Training Loss")
+plt.xlabel("Epoch"); plt.ylabel("Loss"); plt.legend(); plt.show()
+
+# Text Generation
+start = "m"
+inp = torch.tensor([[char_to_idx[start]]])
+gen = start
+for _ in range(20):
+    out = model(inp)
+    prob = torch.softmax(out[-1][0], dim=0)
+    next_idx = torch.argmax(prob).item()
+    gen += idx_to_char[next_idx]
+    inp = torch.tensor([[next_idx]])
+print("\nGenerated Text:", gen)
