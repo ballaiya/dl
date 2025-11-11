@@ -1,0 +1,58 @@
+# --- Simple RNN Character Model ---
+import torch
+import torch.nn as nn
+import matplotlib.pyplot as plt
+
+# Data
+text = "hello world"
+chars = sorted(list(set(text)))
+char_to_idx = {c: i for i, c in enumerate(chars)}
+idx_to_char = {i: c for c, i in char_to_idx.items()}
+
+encoded = torch.tensor([char_to_idx[c] for c in text], dtype=torch.long)
+X, Y = encoded[:-1].unsqueeze(1), encoded[1:].unsqueeze(1)
+
+# Model
+class SimpleRNN(nn.Module):
+    def _init_(self, vocab_size, hidden_size):
+        super()._init_()
+        self.embed = nn.Embedding(vocab_size, hidden_size)
+        self.rnn = nn.RNN(hidden_size, hidden_size)
+        self.fc = nn.Linear(hidden_size, vocab_size)
+    def forward(self, x):
+        out, _ = self.rnn(self.embed(x))
+        return self.fc(out)
+
+vocab_size, hidden_size = len(chars), 16
+model = SimpleRNN(vocab_size, hidden_size)
+loss_fn = nn.CrossEntropyLoss()
+opt = torch.optim.Adam(model.parameters(), lr=0.05)
+
+# Training
+loss_values = []
+for epoch in range(50):
+    opt.zero_grad()
+    out = model(X)
+    loss = loss_fn(out.view(-1, vocab_size), Y.view(-1))
+    loss.backward()
+    opt.step()
+    loss_values.append(loss.item())
+    print(f"Epoch {epoch+1}/50 - Loss: {loss.item():.4f}")
+
+# Plot Loss
+plt.plot(loss_values, label="Training Loss")
+plt.xlabel("Epoch"); plt.ylabel("Loss")
+plt.title("RNN Training Loss Curve")
+plt.legend(); plt.show()
+
+# Text Generation
+start = "h"
+inp = torch.tensor([[char_to_idx[start]]])
+gen = start
+for _ in range(12):
+    out = model(inp)
+    prob = torch.softmax(out[-1][0], dim=0)
+    next_idx = torch.argmax(prob).item()
+    gen += idx_to_char[next_idx]
+    inp = torch.tensor([[next_idx]])
+print("\nGenerated Text:", gen)
