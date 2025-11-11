@@ -1,0 +1,28 @@
+# --- Gradient Descent with AdaGrad ---
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Function & gradient
+f = lambda x: x**2
+grad = lambda x: 2*x
+
+# Initialize
+x, lr, eps, g_accum = 10.0, 0.1, 1e-8, 0
+x_hist, y_hist = [x], [f(x)]
+
+# AdaGrad optimization
+for _ in range(50):
+    g = grad(x)
+    g_accum += g**2
+    x -= (lr / (np.sqrt(g_accum) + eps)) * g
+    x_hist.append(x)
+    y_hist.append(f(x))
+
+# Plot
+xs = np.linspace(-11, 11, 200)
+plt.plot(xs, f(xs), label="f(x)=x²")
+plt.scatter(x_hist, y_hist, c='r', label="AdaGrad steps")
+plt.plot(x_hist, y_hist, 'r--', alpha=0.6)
+plt.title("Gradient Descent with AdaGrad")
+plt.xlabel("x"); plt.ylabel("f(x)"); plt.legend(); plt.grid()
+plt.show()
