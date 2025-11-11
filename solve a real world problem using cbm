@@ -1,0 +1,36 @@
+import pandas as pd 
+# Define the smartphone options and scores for each factor (price, performance, etc.) 
+24 
+25 
+ 
+data = { 
+    "smartphone": ["Phone A", "Phone B", "Phone C", "Phone D", "Phone E"], 
+    "price": [8, 7, 5, 6, 9],  # Lower price is better 
+    "performance": [7, 9, 6, 8, 5], 
+    "battery_life": [9, 8, 7, 5, 8], 
+    "camera_quality": [6, 9, 7, 8, 7], 
+    "user_reviews": [8, 7, 9, 6, 7] 
+} 
+ 
+# Define the weights for each factor 
+weights = { 
+    "price": 5, 
+    "performance": 8, 
+    "battery_life": 7, 
+    "camera_quality": 6, 
+    "user_reviews": 4 
+} 
+ 
+# Create a DataFrame from the data 
+df = pd.DataFrame(data) 
+# Invert the 'price' scores since lower price is better 
+df['price'] = 10 - df['price'] 
+# Calculate the weighted total score for each smartphone 
+for factor in weights: 
+    df[factor] = df[factor] * weights[factor] 
+# Sum up the weighted scores for each smartphone 
+df['total_score'] = df[list(weights.keys())].sum(axis=1) 
+# Sort by total score to rank the smartphones 
+df_sorted = df[['smartphone', 'total_score']].sort_values(by='total_score', ascending=False) 
+# Display the ranked smartphones 
+print(df_sorted)
