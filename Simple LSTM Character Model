@@ -13,8 +13,8 @@ X, Y = encoded[:-1].unsqueeze(1), encoded[1:].unsqueeze(1)
 
 # Model
 class LSTM_RNN(nn.Module):
-    def _init_(self, vocab_size, hidden_size):
-        super()._init_()
+    def __init__(self, vocab_size, hidden_size):
+        super().__init__()
         self.embed = nn.Embedding(vocab_size, hidden_size)
         self.lstm = nn.LSTM(hidden_size, hidden_size)
         self.fc = nn.Linear(hidden_size, vocab_size)
